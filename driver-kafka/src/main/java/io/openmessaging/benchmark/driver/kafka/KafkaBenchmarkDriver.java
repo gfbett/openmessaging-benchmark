@@ -21,13 +21,7 @@ package io.openmessaging.benchmark.driver.kafka;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -102,7 +96,12 @@ public class KafkaBenchmarkDriver implements BenchmarkDriver {
     public CompletableFuture<Void> createTopic(String topic, int partitions) {
         return CompletableFuture.runAsync(() -> {
             try {
-                NewTopic newTopic = new NewTopic(topic, partitions, config.replicationFactor);
+                NewTopic newTopic;
+                if (config.replicationFactor != 0) {
+                    newTopic = new NewTopic(topic, partitions, config.replicationFactor);
+                } else {
+                    newTopic = new NewTopic(topic, Optional.of(partitions), Optional.empty());
+                }
                 newTopic.configs(new HashMap<>((Map) topicProperties));
                 admin.createTopics(Arrays.asList(newTopic)).all().get();
             } catch (InterruptedException | ExecutionException e) {
